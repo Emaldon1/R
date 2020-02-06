@@ -1,0 +1,36 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+#A
+1) We can tell from the rho that the correlation is positive.
+2)As the tempature increases students are willing to go out more and study in the library. When the tempature decreases students are not willing to leave the comfort of their warm homes as much and tend to not study as much as well.
+3)Y is indepndent of X makes me believe that it is a zero correlation and I would expect the r to be 0. While Y is linearly depedent on X makes me believe that there is negative or postive between X and Y,.I would excpect the number to be either negative or positive.
+4)I would expect it to be positive because as you grow you tend to get taller. However, they do states that the older we get the shorter we get. We also have to take into account how a person cares for their body. The more body mass you have the shorter you will appear due to gravity. 
+
+```{r}
+#B
+WeightMale<-c(64,75.3,73,82.1,76.2,95.7,59.4,93.4,82.1,78.9,76.7,82.1,83.9,73,64.4,77.6)
+Glucose<-c(108,109,104,102,105,121,79,107,101,85,99,100,108,104,102,87)
+cor.test(WeightMale,Glucose)
+```
+```{r}
+qt(0.025,14,lower.tail = F)
+pt(2.0703,14,lower.tail = F)
+```
+Based off of the correlatin coefficient .48, we  can state that there is a slight positive correlation betwen weight, and glucose level.
+**By Hand is on Paper**
+
+```{r}
+#C
+Size<-c(1760,2400,2500,5850,6730,2730,7960,2740,3010,3080,3370,3740,4910,5089,2040,5090,5380,6990)
+ActivityL<-c(529,473,461,425,389,465,416,532,484,527,488,485,478,434,566,468,449,421)
+cor.test(Size,ActivityL)
+```
+```{r}
+qt(0.025,16,lower.tail = F)
+pt(-5.7372,16,lower.tail = F)
+```
+Based off of the correlation coefficient -.81 we can state that there is a negative correlation between size and activity level.

@@ -1,0 +1,67 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+library(multtest);data("golub")
+subset<-golub[,golub.cl == 1]
+Subset10<-head(subset,10)
+Subset10
+
+```
+```{r}
+means <-apply(Subset10,1,mean)
+i = Subset10[order(apply(Subset10,1,mean),decreasing = T)]
+SubsetS = Subset10[order(means, decreasing = TRUE),]
+SubsetS
+```
+
+```{r}
+SubSD<-apply(SubsetS,2,sd)
+SubSD
+
+```
+```{r}
+which.max(SubsetS[5,])
+```
+```{r}
+Col5<-ifelse(SubsetS[3,] >=0, "Positive","Negative")
+Col5
+```
+```{r}
+par(mfrow=c(2,2))
+#for (i in 7:10){
+  #read.table(SubsetS,header = TRUE,sep = "\t")
+  plot(SubsetS[7,])
+  plot(SubsetS[8,])
+  plot(SubsetS[9,])
+  plot(SubsetS[10,])
+#}
+```
+```{r}
+R2<-SubsetS[,2]
+SubsetR<-rank(SubsetS[,2])
+SubsetO<-order(SubsetS[,2])
+SubserSO<-sort(SubsetS[,2])
+R2
+SubsetR #This ranks returns the sample ranks of the values in a vector.
+SubsetO #This gives you the order that the data should be in but it does not give you the data itself.
+SubserSO #This sorts your data from least to greatest. If you want to do it in descending order you would need to put descending = T. 
+```
+
