@@ -1,0 +1,127 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r}
+#1
+setwd("~/Desktop")
+
+myT<-read.table("nc101_scaff_dataCounts.txt",sep="\t",header=TRUE,row.names=1)
+
+# remove rare genes
+myT <- myT[ apply( myT,1, median)> 5,]
+
+myTNorm <- myT
+for ( i in 1:ncol(myT))
+{
+	colSum = sum(myT[,i])
+	myTNorm[,i] =myTNorm[,i]/colSum
+}
+```
+
+
+```{r}
+#2&3
+#3 is first and at the below 3 is 2.
+library(dplyr)
+Day2 <- myTNorm %>% select(1:3)
+Week12 <- myTNorm %>% select(4:6)
+Week20 <- myTNorm %>% select(7:11)
+```
+
+```{r}
+Day2VW12 <- vector()
+
+meanDay2 = mean(apply(Day2,2,sum))
+meanWeek12 = mean(apply(Week12,2,sum))
+
+for( i in 1:nrow(myTNorm))
+{
+	vals1 <- as.numeric( myTNorm[i,1:3])
+	vals2 <- as.numeric( myTNorm[i,4:6])
+	Day2VW12[i] = t.test( vals1,vals2)$p.value
+}	
+
+	{
+	if(Day2VW12[i] < 0.95)
+		Day2VW12[i] = 2 * Day2VW12[i]
+	else
+		 Day2VW12[i] = 2 * (1-Day2VW12[i])
+	
+}
+	
+
+hist(Day2VW12, main="Day 2 vs Week 12 T-Test")
+```
+
+```{r}
+Day2VW20 <- vector()
+
+meanDay2_2 = mean(apply(Day2,2,sum))
+meanWeek20 = mean(apply(Week20,2,sum))
+
+for( i in 1:nrow(myTNorm))
+{
+	vals1 <- as.numeric( myTNorm[i,1:3])
+	vals2 <- as.numeric( myTNorm[i,7:11])
+	Day2VW20[i] = t.test( vals1,vals2)$p.value
+}	
+
+	{
+	if(Day2VW20[i] < 0.95)
+		Day2VW20[i] = 2 * Day2VW20[i]
+	else
+		 Day2VW20[i] = 2 * (1-Day2VW20[i])
+	
+}
+	
+
+hist(Day2VW20, main="Day 2 vs Week 20 T-Test")
+```
+
+```{r}
+Week12VW20 <- vector()
+
+meanWeek12_2 = mean(apply(Week12,2,sum))
+meanWeek20_2 = mean(apply(Week20,2,sum))
+
+for( i in 1:nrow(myTNorm))
+{
+	vals1 <- as.numeric( myTNorm[i,4:6])
+	vals2 <- as.numeric( myTNorm[i,7:11])
+	Week12VW20[i] = t.test( vals1,vals2)$p.value
+}	
+
+	{
+	if(Week12VW20[i] < 0.95)
+		Week12VW20[i] = 2 * Week12VW20[i]
+	else
+		 Week12VW20[i] = 2 * (1-Week12VW20[i])
+	
+}
+	
+
+hist(Week12VW20, main="Week 12 vs Week 20 T-Test")
+```
+
+```{r}
+#2
+#Unadjusted
+Un_X <- sum(Day2VW12 <=.05)
+Un_Y <- sum(Day2VW20 <=.05)
+Un_Z <- sum(Week12VW20 <=.05)
+
+#Adjusted using BH
+AdBH_X <- sum(p.adjust(Day2VW12, method = "BH")<= .05)
+AdBH_Y <- sum(p.adjust(Day2VW20, method = "BH")<= .05)
+AdBH_Z <- sum(p.adjust(Week12VW20, method = "BH")<= .05)
+
+#Adjusted using Bonf.
+Bonf_X <- sum(Day2VW12 <=.05/nrow(myT))
+Bonf_Y <- sum(Day2VW20 <=.05/nrow(myT))
+Bonf_Z <- sum(Week12VW20 <=.05/nrow(myT))
+```
+
