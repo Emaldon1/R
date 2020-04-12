@@ -1,0 +1,103 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r}
+setwd("~/Desktop")
+Cancer <- read.table("cancerRisk.txt", header = T, sep = "\t")
+```
+
+```{r}
+#1A
+plot(log10(Cancer$CumulativeCellDivisions), log10(Cancer$Lifetime_cancer_risk), main = "Cancer Risk Vs. Cell Division", xlab = "Total Number of Cell Division", ylab = "Lifetime of Cancer Risk", col= "purple")
+```
+
+
+```{r}
+#1B
+LinModel = lm(Cancer$Lifetime_cancer_risk ~ Cancer$CumulativeCellDivisions)
+plot(LinModel)
+abline(LinModel,col = "red")
+```
+
+```{r}
+qqnorm(residuals(LinModel))
+abline(LinModel,col = "red")
+```
+
+```{r}
+#1C
+summary(LinModel)
+#The p-value is .002, which indicated that we reject the null hypthesis. The R-sequared is .25, which is the adjusted R-squared value. 
+```
+
+```{r}
+#1D
+#In 1B you can see based off of the graphs whether the assumptions of constant vairnace and normal distrbution of the residues are resonable or not. I do not think they are resonable because due to the constraints many of the plots/residues look clustered in one area then there is one point that is in a far out region. The only plot that resembles something that we could use is the qqnorm. I think the plots indicate that there is a non-constant variance and the distribution is only normal for some of the data points. We can see in qqnorm that the data is normally distrbuted. 
+```
+
+```{r}
+#2
+setwd("~/Desktop")
+library(dplyr)
+Control <- read.table("caseControlData.txt", header = T, sep = "\t")
+BMI <- read.table("BMI_Data.txt", header = T, sep = "\t")
+
+
+
+```
+
+```{r}
+#Removing case and control and getting rid of the excess numners afterwards so the data is easier to merge with the BMI dataset.
+sample <- vector()
+i = 1
+for(i in 1:nrow(Control)){
+  sample[i] <- sub("case","",Control$sample[i])
+  sample[i] <- sub("control","",sample[i])
+  sample[i] <- strsplit(sample[i],"_",)[[1]][1]
+}
+
+```
+
+```{r}
+#Merging sample vector into Control after parsing the data
+Control[["sample"]] <- sample
+
+```
+
+```{r}
+#chanigng the name of BMI columns name with sample so when I do the inner join it has something to match too.
+colnames(BMI)[1] <- "sample"
+```
+
+```{r}
+#Doing an inner join to connect BMI and Control datasets.
+#Jon Lee gave me this idea with the library dplyr
+BMI_Control <- inner_join(BMI,Control)
+```
+```{r}
+#Omitting any NA that did not match up in the dataset.
+BMI_Control <- na.omit(BMI_Control)
+```
+
+```{r}
+#Jon Lee helped me
+pvals <- vector()
+for (i in 1:(ncol(BMI_Control)-2))
+  {
+  j <- i+2
+  X <- BMI_Control[,2]
+  Y <- BMI_Control[,j]
+  LM_BC <- lm(Y~X)
+  pvals[i] <- anova(LM_BC)$"Pr(>F)"
+}
+
+hist(pvals, col = "purple", xlab = "P-Values", main = "Histogram of OTU P-Values")
+```
+```{r}
+sum(pvals <= .1)
+sum(pvals <= .1/420)
+```
+
