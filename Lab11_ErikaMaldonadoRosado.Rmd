@@ -1,0 +1,54 @@
+---
+output:
+  word_document: default
+  html_document: default
+---
+
+
+```{r}
+#1
+setwd("~/Desktop")
+inFileName <- paste("prePostPhylum.txt", sep ="")
+
+myT <-read.table(inFileName,header=TRUE,sep="\t")
+numCols <- ncol(myT)
+myColClasses <- c(rep("character",4), rep("numeric", numCols-4))
+myT <-read.table(inFileName,header=TRUE,sep="\t",colClasses=myColClasses)
+
+myTData<-myT[,5:10]
+
+myPCOA <- prcomp(myTData)
+
+summary(myPCOA)
+```
+
+```{r}
+#2
+library(ggfortify)
+autoplot(myPCOA, data = myT, colour = 'genotype')
+autoplot(myPCOA, data = myT, colour = 'cage')
+autoplot(myPCOA, data = myT, colour = 'time')
+```
+
+```{r}
+PC_1 <- myPCOA$x[,1]
+PC_2 <- myPCOA$x[,2]
+#If I use scores it is only when I use princomp. I prefer prcomp because it shows PC1 instead of comp. 1
+#PC_1 <- myPCOA$scores[,1]
+#PC_2 <- myPCOA$scores[,2]
+```
+```{r}
+#3
+#cage
+summary(aov(PC_1 ~ myT$cage, data = myT))
+summary(aov(PC_2 ~ myT$cage, data = myT))
+
+#genotype
+t.test(PC_1 ~ myT$genotype)
+t.test(PC_2 ~ myT$genotype)
+
+#time
+t.test(PC_1 ~ myT$time)
+t.test(PC_2 ~ myT$time)
+```
+

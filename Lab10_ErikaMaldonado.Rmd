@@ -1,0 +1,183 @@
+
+
+```{r}
+#1
+setwd("~/Desktop")
+
+myT<-read.table("nc101_scaff_dataCounts.txt",sep="\t",header=TRUE,row.names=1)
+
+# remove rare genes
+myT <- myT[ apply( myT,1, median)> 5,]
+
+myTNorm <- myT
+for ( i in 1:ncol(myT))
+{
+	colSum = sum(myT[,i])
+	myTNorm[,i] =myTNorm[,i]/colSum
+}
+```
+
+```{r}
+#(A)	For each row in the spreadsheet, perform a one-way ANOVA with categories “day 2”, “week 12” and “week 18”.  Plot out the histogram of all p-values.  How many genes are significant at a BH FDR-corrected 0.05 threshold.  (see mini-lecture 16B).
+
+PVals <- vector()
+
+for( i in 1:nrow(myTNorm))
+{
+    vals1 <- as.numeric( myTNorm[i,1:3])
+    vals2 <- as.numeric( myTNorm[i,4:6])
+    vals3 <- as.numeric(myTNorm[i,7:11])
+    xvals <-c(vals1,vals2,vals3)
+    genevals <- c(rep("vals1",length(vals1)),rep("vals2",length(vals2)),rep("vals3",length(vals3)))
+    genevals <- factor(genevals)
+    geneanova <- lm(xvals~genevals, x = TRUE)
+    PVals[i] = anova(geneanova)$"Pr(>F)"
+}
+
+
+hist(PVals, main="PValues", breaks = 50, col = "pink")
+
+```
+```{r}
+#df 8
+sum(residuals(geneanova)^2)
+#df 9
+sum(residuals(DayTotal)^2)
+((3.579946e-08 - 3.255525e-08/1) / (3.255525e-08/8))
+pf(0.7972195,1,8,lower.tail = F)
+
+```
+
+```{r}
+AdjustedPVals <- p.adjust(PVals, method = "BH")
+sum(AdjustedPVals <= .05)
+summary(geneanova)
+```
+
+
+```{r}
+#(B)	Next make an ANOVA as a linear regression as a function of time (so 2 days, 86 days and 128 days).  Plot out the histogram of all p-values.  How many genes are significant at a BH FDR-corrected 0.05 threshold.  (see lecture 15)
+#Anu and I worked together on the homework
+#Jon & Dr. Fodor helped me during tutoring/email by looking at my code. Thank you.
+DaysPvals <- vector()
+for( i in 1:nrow(myTNorm))
+{
+    Day2 <- as.numeric( myTNorm[i,1:3])
+    Day86 <- as.numeric( myTNorm[i,4:6])
+    Day128 <- as.numeric(myTNorm[i,7:11])
+    Days <-c(Day2,Day86,Day128)
+    DayLength <- c(rep(2,length(Day2)),rep(86,length(Day86)),rep(128,length(Day128)))
+    DayTotal <- lm(Days ~ DayLength, x = TRUE)
+    DaysPvals[i] = anova(DayTotal)$"Pr(>F)"[1]
+}
+
+hist(DaysPvals, main="P-Values For Different Days", col = "navy")
+
+AdjustedPValsDays <- p.adjust(DaysPvals, method = "BH")
+sum(AdjustedPValsDays <= .05)
+summary(DayTotal)
+```
+
+```{r}
+#(C)	Finally, for each row in the spreadsheet perform an ANVOA comparing the three-parameter model from (A) and the two parameter model from (B).  (see mini-lecture 16C).  Plot out the histogram of all p-values.  For how many genes is there a significant difference between these two models at a BH FDR-corrected threshold. 
+#Anu and I worked together
+PValsOneWay <- vector()
+RegPVals <- vector()
+ModelPvals <- vector()
+Index_Vex <- vector()
+for( i in 1:nrow(myTNorm))
+{
+    Index_Vex[i] <- i
+    
+    #Columns that we need to take
+    Day2 <- as.numeric( myTNorm[i,1:3])
+    Week12 <- as.numeric( myTNorm[i,4:6])
+    Week20 <- as.numeric(myTNorm[i,7:11])
+    df_Days <- c(Day2,Week12,Week20)
+    Types <- factor(c(rep("Day2",length(Day2)),rep("Week12",length(Week12)),rep("Week20",length(Week20))))
+    Length <- c(rep(2,length(Day2)),rep(86,length(Week12)),rep(128,length(Week20)))
+    
+    #LM of one way and regression
+    OneWay <- lm(df_Days ~ Types)
+    Reg <- lm(df_Days ~ Length)
+    PValsOneWay[i] <- anova(OneWay)$"Pr(>F)"[1]
+    RegPVals[i] <- anova(Reg)$"Pr(>F)"[1]
+    
+    #Anu helped me with this section
+    oneway_res <- sum(residuals(OneWay)^2)
+    Reg_res <- sum(residuals(Reg)^2)
+    difference <- ((Reg_res - oneway_res)/2)/(oneway_res/8)
+    ModelPvals[i] <- pf(difference, 2, 8,lower.tail = F)
+}
+
+```
+```{r}
+hist(ModelPvals, main="P-Values of Three and Two Parameter Models", col = "maroon", xlab = "P-Values For The Different Models", breaks = 20)
+```
+
+
+```{r}
+ForPvals2 <- p.adjust(ModelPvals, method = "BH")
+sum(ForPvals2 <= .05)
+
+```
+
+```{r}
+# (D)Make three graphs showing the relative abundance of the most significant gene under each of the three ANOVA models.  For (A) and (C), the x-axis will the category (day 3, week 12 and week 18) and the y-axis will be the relative abundance.  Be sure to properly label and title all graphs and axes.  For (B) the x-axis will be time (in days) and the y-axis will be the relative abundance. For the graph of the top hit from (B), include the regression line for the plot from (B).
+
+pValuesOneWayAnova <- vector()
+pValuesRegression <- vector()
+pValueModelDiff <- vector()
+index <- vector()
+cats <- factor( c( rep("day2",3),rep("week12",3),rep("week20",5)  ))
+
+for( i in 1:nrow(myTNorm)) 
+{
+	index[i] <- i
+	#Columns that we need to take
+	Day2 <- as.numeric( myTNorm[i,1:3])
+    Week12 <- as.numeric( myTNorm[i,4:6])
+    Week20 <- as.numeric(myTNorm[i,7:11])
+    df_Days <- c(Day2,Week12,Week20)
+    Length <- c(rep(2,length(Day2)),rep(86,length(Day86)),rep(128,length(Day128)))
+    
+    #LM of one way and regression
+    OneWay_2 <- lm(df_Days ~ cats)
+    Reg_2 <- lm(df_Days ~ Length, x = TRUE)
+    pValuesOneWayAnova[i] <- anova(OneWay_2)$"Pr(>F)"[1]
+    pValuesRegression[i] <- anova(Reg_2)$"Pr(>F)"[1]
+    
+    #Start of Comparison of Models
+    OneWay_Res_2 <- sum(residuals(OneWay_2)^2)
+    Reg_res_2 <- sum(residuals(Reg_2)^2)
+    difference <- ((Reg_res_2 - OneWay_Res_2)/2)/(OneWay_Res_2/8)
+    pValueModelDiff[i] <- pf(difference, 2, 8,lower.tail = F)
+}
+
+```
+```{r}
+myFrame <- data.frame( index, pValuesOneWayAnova,pValuesRegression,pValueModelDiff)
+myFrame <- myFrame[ order(myFrame$pValuesOneWayAnova), ] 
+boxplot( as.numeric( myTNorm[ myFrame$index[1],]) ~ cats, xlab = "Days and Weeks", ylab = "Abundance", main = "One-Way Anova Model") 
+```
+
+
+```{r}
+myFrame <- data.frame( index, pValuesOneWayAnova,pValuesRegression,pValueModelDiff)
+myFrame <- myFrame[ order(myFrame$pValuesRegression), ] 
+boxplot( as.numeric( myTNorm[ myFrame$index[1],]) ~ Length,xlab = "Days", ylab = "Relative Abundance", main = "Linear Regression Model" ) 
+abline(Reg_2, col = "red")
+```
+
+```{r}
+myFrame <- data.frame( index, pValuesOneWayAnova,pValuesRegression,pValueModelDiff)
+myFrame <- myFrame[ order(myFrame$pValueModelDiff), ] 
+boxplot( as.numeric( myTNorm[ myFrame$index[1],]) ~ cats,xlab = "Day and Weeks", ylab = "Abundance", main = "Model Differences" ) 
+```
+
+
+```{r}
+#(E)	 Overall, do you think the three parameter model in (A) or the two-parameter model in (B) is more appropriate for these data?  Justify your answer.
+#I think that  the two parameter is the best fit because when we looked at the p-value that was corrected with the "BH," at a 95% interval in the two parameter model only  448 of the genes were a significant hit. While in the Three parameter model there was 612. When I did a comparison of both of the models together you can see there is a difference between the two models. The p-value of the f-statistics for the two paramter is .07 while the p-value for the three is at .15. 
+```
+
